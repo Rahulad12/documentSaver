@@ -11,9 +11,9 @@
     "lib": ["ES2020"],
 
     /* Path Aliases */
-    "baseUrl": "./src",
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     },
 
     /* Interop & Runtime */

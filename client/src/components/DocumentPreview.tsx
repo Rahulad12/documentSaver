@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  X,
   Download,
   ZoomIn,
   ZoomOut,
@@ -110,7 +109,7 @@ const DocumentPreviewDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={`
-        max-w-[95vw] max-h-[95vh] w-full h-full flex flex-col p-0 gap-0 min-w-4xl
+        max-w-[95vw] max-h-[95vh] w-full h-full flex flex-col p-0 gap-0 xs:min-w-xl sm:min-w-2xl md:min-w-3xllg:min-w-4xl
         ${isFullscreen ? 'max-w-full max-h-full rounded-none' : 'rounded-lg'}
       `}>
         <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-gray-50 to-gray-100">

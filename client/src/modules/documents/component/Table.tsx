@@ -130,7 +130,7 @@ const CustomTable = ({
       {/* Table Header Stats */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Documents</h3>
+          <h3 className="text-lg font-semibold text-primary">Documents</h3>
           <p className="text-sm text-gray-600 mt-1">
             {documents.length} {documents.length === 1 ? 'document' : 'documents'} total
           </p>
@@ -156,14 +156,14 @@ const CustomTable = ({
       </div>
 
       {/* Table Container */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto max-h-[calc(80vh-12rem)]">
         <Table className="min-w-full">
           <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100/50">
             <TableRow className="border-b border-gray-200 hover:bg-transparent">
               {columns.map((col, index) => (
                 <TableHead
                   key={col.accessorKey || index}
-                  className={`py-4 px-6 font-semibold text-gray-900 text-sm uppercase tracking-wider ${col.name === "Preview Document" ? "text-right" : ""
+                  className={`fixed top-0 py-4 px-6 font-semibold bg-primary text-primary-foreground text-sm uppercase tracking-wider ${col.name === "Preview Document" ? "text-right" : ""
                     } ${sortable && col.sortable ? 'cursor-pointer select-none' : ''}`}
                   onClick={() => col.sortable && handleSort(col.accessorKey || '')}
                 >

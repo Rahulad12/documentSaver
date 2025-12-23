@@ -5,6 +5,7 @@ import {
 } from "@/controllers/document.controller";
 import { Authenticate } from "@/middlewares/auth.middleware";
 import { upload } from "@/middlewares/upload.middleware";
+import { encryptUploadedFile } from "@/middlewares/encryption.middleware";
 import express from "express";
 import { validateDocumentRequest } from "@/utils/ValidatorDefinations";
 import { validate } from "@/middlewares/validate";
@@ -16,6 +17,7 @@ documentRouter.post(
   "/",
   Authenticate,
   upload.single("document"),
+  encryptUploadedFile,
   validateDocumentRequest,
   validate,
   uploadDocument

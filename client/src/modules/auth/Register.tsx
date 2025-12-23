@@ -12,10 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useRegisterUser } from "@/apis/hooks/auth.hooks";
+import toast from "react-hot-toast";
 
 // Zod validation schema
 const registerSchema = z
@@ -29,9 +29,6 @@ const registerSchema = z
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
-    agreeToTerms: z.boolean().refine((val) => val === true, {
-      message: "You must agree to the terms and conditions",
-    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -48,17 +45,18 @@ const RegisterPage = () => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
-    setValue,
-    watch,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      agreeToTerms: false,
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     },
   });
 
-  const agreeToTerms = watch("agreeToTerms");
   const { mutateAsync: registerUser, isPending: loadingRegister } =
     useRegisterUser();
   const onSubmit = async (data: RegisterFormData) => {
@@ -68,11 +66,15 @@ const RegisterPage = () => {
         email: data.email,
         password: data.password,
       });
-      if (res.status === 200) {
+      if (res.status === 201) {
         navigate("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      toast.error(error.response.data.message || "Faild Register");
+    }
+    finally {
+      reset();
     }
   };
 
@@ -188,34 +190,6 @@ const RegisterPage = () => {
                 </p>
               )}
             </div>
-
-            {/* Terms and Conditions Checkbox */}
-            <div className="flex items-start space-x-2">
-              <Checkbox
-                id="agreeToTerms"
-                checked={agreeToTerms}
-                onCheckedChange={(checked: any) =>
-                  setValue("agreeToTerms", checked as boolean)
-                }
-              />
-              <div className="grid gap-1.5 leading-none">
-                <label
-                  htmlFor="agreeToTerms"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  I agree to the{" "}
-                  <a href="#" className="text-blue-600 hover:underline">
-                    terms and conditions
-                  </a>
-                </label>
-                {errors.agreeToTerms && (
-                  <p className="text-sm text-red-500">
-                    {errors.agreeToTerms.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
             {/* Submit Button */}
             <Button
               onClick={handleSubmit(onSubmit)}

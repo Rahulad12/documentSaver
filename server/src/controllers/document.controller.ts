@@ -1,8 +1,9 @@
 import Document, { type IDocument } from "@/models/Document";
+import logger from "@/utils/logger";
 import { Request, Response } from "express";
-import { request } from "node:http";
 
 export const uploadDocument = async (req: Request, res: Response) => {
+  console.log(req.file);
   if (!req.file) {
     return res.status(400).json({
       success: false,
@@ -39,16 +40,19 @@ export const uploadDocument = async (req: Request, res: Response) => {
 };
 
 export const getMyDocuments = async (req: Request, res: Response) => {
+  logger.info("Fetching documents for user", req.user?.sub);
   try {
     const docs = await Document.find({ userId: req.user?.sub })
       .select("-__v -updatedAt")
       .sort({ createdAt: -1 });
     if (docs.length === 0) {
+      logger.warn("No documents found for this user", req.user?.sub);
       return res.status(404).json({
         success: false,
         message: "No documents found for this user",
       });
     }
+    logger.info("Documents fetched successfully", docs);
     res.status(200).json({
       success: true,
       message: "Documents fetched successfully",
@@ -63,6 +67,7 @@ export const getMyDocuments = async (req: Request, res: Response) => {
   }
 };
 export const getDocumentById = async (req: Request, res: Response) => {
+  console.log(req.params.id);
   try {
     const doc = await Document.findById(req.params.id).select(
       "-__v -updatedAt"

@@ -14,7 +14,6 @@ export const UseSaveDocument = () => {
       return postDocument(document);
     },
     onSuccess: (data: any) => toast.success(data.data.message),
-    onError: (error: any) => toast.error(error.response.data.message),
   });
 };
 

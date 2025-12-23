@@ -26,3 +26,6 @@ dist-ssr
 *.tsbuildinfo
 coverage
 nodemon.json
+uploads
+ENCRYPTION_SETUP.md
+yarn.lock

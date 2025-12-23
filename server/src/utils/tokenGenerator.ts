@@ -10,7 +10,7 @@ export const generateToken = (user: IUser) => {
     },
     secrete_key as string,
     {
-      expiresIn: "30d",
+      expiresIn: "1d",
     }
   );
 };

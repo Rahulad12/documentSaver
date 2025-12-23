@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import toast from "react-hot-toast";
 
 export type DocumentTypes =
   | "citizenship"
@@ -147,8 +148,14 @@ const AddDocuments = () => {
       reset();
       setSelectedFile(null);
       setTimeout(() => setSubmitSuccess(false), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      const err = error.response.data;
+      if (err?.errors) {
+        toast.error(err.errors[0].message);
+      } else {
+        toast.error(err.message);
+      }
     }
   };
 
@@ -191,8 +198,8 @@ const AddDocuments = () => {
         <Card className="border shadow-sm">
           <CardContent className="p-6">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Document Information</h2>
-              <p className="text-gray-500 mt-2">Fill in the details below to save your document</p>
+              <h2 className="text-2xl font-bold text-primary">Document Information</h2>
+              <p className="text-muted-foreground mt-2">Fill in the details below to save your document</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -200,8 +207,8 @@ const AddDocuments = () => {
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Type className="h-4 w-4 text-indigo-600" />
-                    <label className="text-sm font-semibold text-gray-900">
+                    <Type className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
                       Title *
                     </label>
                   </div>
@@ -223,8 +230,8 @@ const AddDocuments = () => {
 
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <FileText className="h-4 w-4 text-indigo-600" />
-                    <label className="text-sm font-semibold text-gray-900">
+                    <FileText className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
                       Description
                     </label>
                   </div>
@@ -244,8 +251,8 @@ const AddDocuments = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <FileType className="h-4 w-4 text-indigo-600" />
-                    <label className="text-sm font-semibold text-gray-900">
+                    <FileType className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
                       Document Type *
                     </label>
                   </div>
@@ -288,8 +295,8 @@ const AddDocuments = () => {
 
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Hash className="h-4 w-4 text-indigo-600" />
-                    <label className="text-sm font-semibold text-gray-900">
+                    <Hash className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
                       Document Number *
                     </label>
                   </div>
@@ -314,8 +321,8 @@ const AddDocuments = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <CalendarDays className="h-4 w-4 text-indigo-600" />
-                    <label className="text-sm font-semibold text-gray-900">
+                    <CalendarDays className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
                       Issued Date
                     </label>
                   </div>
@@ -363,8 +370,8 @@ const AddDocuments = () => {
 
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <FileDigit className="h-4 w-4 text-indigo-600" />
-                    <label className="text-sm font-semibold text-gray-900">
+                    <FileDigit className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
                       Expiry Date
                     </label>
                   </div>
@@ -417,8 +424,8 @@ const AddDocuments = () => {
               {/* File Upload Section */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Upload className="h-4 w-4 text-indigo-600" />
-                  <label className="text-sm font-semibold text-gray-900">
+                  <Upload className="h-4 w-4 text-primary/90" />
+                  <label className="text-sm font-semibold text-muted-foreground">
                     Document File *
                   </label>
                 </div>
@@ -455,7 +462,7 @@ const AddDocuments = () => {
                           <div className="mt-4 flex gap-3">
                             <label
                               htmlFor="file-upload"
-                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 cursor-pointer transition"
+                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-primary bg-indigo-50 rounded-lg hover:bg-indigo-100 cursor-pointer transition"
                             >
                               Change File
                             </label>
@@ -509,7 +516,7 @@ const AddDocuments = () => {
               <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
                 <Button
                   type="submit"
-                  className="flex-1 h-11 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-sm"
+                  className="flex-1 h-11 shadow-sm cursor-pointer"
                   disabled={documentSaveLoading}
                 >
                   {documentSaveLoading ? (
@@ -526,7 +533,7 @@ const AddDocuments = () => {
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="destructive"
                   onClick={() => {
                     reset();
                     setSelectedFile(null);
@@ -534,7 +541,7 @@ const AddDocuments = () => {
                     if (input) input.value = '';
                   }}
                   disabled={documentSaveLoading}
-                  className="flex-1 h-11"
+                  className="flex-1 h-11 cursor-pointer"
                 >
                   Clear All Fields
                 </Button>

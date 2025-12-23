@@ -2,6 +2,7 @@ import Document from "@/models/Document";
 import { Request, Response } from "express";
 import path from "path";
 import fs from "fs";
+import { decryptFile } from "@/utils/encryption.util";
 
 const serveDocumentById = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -23,24 +24,31 @@ const serveDocumentById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "File not found" });
     }
 
+    // Decrypt the file
+    const decryptedBuffer = await decryptFile(absolutePath);
+
     const ext = path.extname(absolutePath).toLowerCase();
 
     // Set proper content type and headers
     res.setHeader("Content-Disposition", "inline");
 
-    if (ext === ".pdf") {
+    // Remove .enc extension for content type detection
+    const originalExt = ext.replace(".enc", "");
+
+    if (originalExt === ".pdf") {
       res.setHeader("Content-Type", "application/pdf");
-    } else if ([".jpg", ".jpeg"].includes(ext)) {
+    } else if ([".jpg", ".jpeg"].includes(originalExt)) {
       res.setHeader("Content-Type", "image/jpeg");
-    } else if (ext === ".png") {
+    } else if (originalExt === ".png") {
       res.setHeader("Content-Type", "image/png");
-    } else if (ext === ".webp") {
+    } else if (originalExt === ".webp") {
       res.setHeader("Content-Type", "image/webp");
     } else {
       res.setHeader("Content-Type", "application/octet-stream");
     }
 
-    res.status(200).sendFile(absolutePath);
+    // Send decrypted buffer
+    res.status(200).send(decryptedBuffer);
   } catch (error) {
     console.error("Error serving document:", error);
     res.status(500).json({ message: "Failed to serve document" });
