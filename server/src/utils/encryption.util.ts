@@ -43,10 +43,6 @@ export const encryptFile = async (
   inputPath: string,
   outputPath: string
 ): Promise<void> => {
-  logger.info("Encrypting file:", inputPath);
-  logger.info("Output path:", outputPath);
-  console.log(inputPath);
-  console.log(outputPath);
   try {
     // Read the file
     const fileBuffer = await fs.readFile(inputPath);
@@ -66,14 +62,11 @@ export const encryptFile = async (
       cipher.final(),
     ]);
     logger.info("Encrypted file:", encrypted);
-    console.log(encrypted);
     // Get the auth tag
     const authTag = cipher.getAuthTag();
-    console.log(authTag);
     logger.info("Auth tag:", authTag);
     // Combine IV + encrypted data + auth tag
     const result = Buffer.concat([iv, encrypted, authTag]);
-    console.log(result);
 
     // Write encrypted file
     await fs.writeFile(outputPath, result);

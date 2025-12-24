@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { encryptFile } from "@/utils/encryption.util";
 import fs from "fs/promises";
+import logger from "@/utils/logger";
 
 /**
  * Middleware to encrypt uploaded files
@@ -11,19 +12,17 @@ export const encryptUploadedFile = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("encryptUploadedFile");
   if (!req.file) {
     console.log("No file uploaded");
     return next();
   }
-  console.log(req.file);
   try {
     const originalPath = req.file.path;
     const encryptedPath = `${originalPath}.enc`;
 
     // Encrypt the file
-    const file = await encryptFile(originalPath, encryptedPath);
-    console.log(file);
+    await encryptFile(originalPath, encryptedPath);
+    logger.info("File encrypted successfully");
     // Delete the original unencrypted file
     await fs.unlink(originalPath);
 
