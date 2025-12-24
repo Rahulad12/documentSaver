@@ -3,7 +3,7 @@ import logger from "@/utils/logger";
 import { Request, Response } from "express";
 
 export const uploadDocument = async (req: Request, res: Response) => {
-  console.log(req.file);
+  logger.info("Uploading document");
   if (!req.file) {
     return res.status(400).json({
       success: false,
@@ -25,12 +25,14 @@ export const uploadDocument = async (req: Request, res: Response) => {
       mimeType: req.file.mimetype,
     });
 
+    logger.info("Document uploaded successfully", doc);
     res.status(201).json({
       success: true,
       message: "Document uploaded successfully",
       document: doc,
     });
   } catch (error) {
+    logger.error("Error uploading document", error);
     console.error(error);
     res.status(500).json({
       success: false,

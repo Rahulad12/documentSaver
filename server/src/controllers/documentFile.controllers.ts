@@ -3,10 +3,11 @@ import { Request, Response } from "express";
 import path from "path";
 import fs from "fs";
 import { decryptFile } from "@/utils/encryption.util";
+import logger from "@/utils/logger";
 
 const serveDocumentById = async (req: Request, res: Response) => {
   const { id } = req.params;
-
+  logger.info("Serving document", id);
   try {
     const doc = await Document.findById(id);
     if (!doc) {
@@ -46,10 +47,11 @@ const serveDocumentById = async (req: Request, res: Response) => {
     } else {
       res.setHeader("Content-Type", "application/octet-stream");
     }
-
+    logger.info("File served successfully");
     // Send decrypted buffer
     res.status(200).send(decryptedBuffer);
   } catch (error) {
+    logger.error("Error serving document:", error);
     console.error("Error serving document:", error);
     res.status(500).json({ message: "Failed to serve document" });
   }

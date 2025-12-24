@@ -14,7 +14,15 @@ connectDB();
 
 const app = express();
 app.use(helmet());
-app.use(cors({ origin: ["http://localhost:5173","https://document-saver.vercel.app"] }));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://document-saver.vercel.app",
+      "http://localhost:5174",
+    ],
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
