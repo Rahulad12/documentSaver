@@ -16,9 +16,18 @@ export const validateDocumentRequest = [
   body("title").notEmpty().withMessage("Title is required"),
   body("documentType").notEmpty().withMessage("Document type is required"),
   body().custom((_, { req }) => {
-    if (!req.file) {
-      throw new Error("Document file is required");
+    // Check for files using req.files (from multer.fields())
+    if (!req.files || typeof req.files !== "object") {
+      throw new Error("Files are required");
     }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Front file is required
+    if (!files.front || files.front.length === 0) {
+      throw new Error("Front file is required");
+    }
+
     return true;
   }),
 ];

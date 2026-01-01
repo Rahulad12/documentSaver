@@ -1,38 +1,18 @@
 {
   "compilerOptions": {
-    /* Project Structure */
+    "target": "ES2020",
+    "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./dist",
 
-    /* Language & Environment */
-    "target": "ES2020",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "lib": ["ES2020"],
-
-    /* Path Aliases */
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["*"]
     },
 
-    /* Interop & Runtime */
     "esModuleInterop": true,
-    "resolveJsonModule": true,
-
-    /* Type Checking */
     "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-
-    /* Important Fixes */
-    "verbatimModuleSyntax": false,
-    "isolatedModules": false,
-
-    /* Output */
-    "sourceMap": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"]
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+    "moduleResolution": "node",
+    "skipLibCheck": true
+  }
 }

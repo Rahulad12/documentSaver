@@ -1,19 +1,51 @@
 import Document, { type IDocument } from "@/models/Document";
 import logger from "@/utils/logger";
 import { Request, Response } from "express";
+import { uploadToCloudinary } from "./uploadToCloudinary.controller";
 
 export const uploadDocument = async (req: Request, res: Response) => {
   logger.info("Uploading document");
-  if (!req.file) {
+
+  // Check if files are present (front and back)
+  if (!req.files || typeof req.files !== "object") {
     return res.status(400).json({
       success: false,
-      message: "No file uploaded",
+      message: "No files uploaded",
     });
   }
-  const { filename } = req.file;
-  req.body.fileUrl = `/uploads/${filename}`;
+
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  // Get front file (required)
+  const frontFile = files.front?.[0];
+  if (!frontFile) {
+    return res.status(400).json({
+      success: false,
+      message: "Front file is required",
+    });
+  }
+
+  // Get back file (optional)
+  const backFile = files.back?.[0];
+  console.log({
+    frontFile,
+    backFile,
+  });
   try {
-    const doc = await Document.create({
+    // Upload front file to Cloudinary
+    const uploadedFront: any = await uploadToCloudinary(frontFile);
+    const frontUrl = uploadedFront.url;
+    const trimmedFrontUrl = frontUrl.split("raw")[1];
+
+    // Upload back file if provided
+    let trimmedBackUrl = trimmedFrontUrl;
+    if (backFile) {
+      const uploadedBack: any = await uploadToCloudinary(backFile);
+      const backUrl = uploadedBack.url;
+      trimmedBackUrl = backUrl.split("raw")[1];
+    }
+
+    await Document.create({
       userId: req.user?.sub,
       title: req.body.title,
       description: req.body.description,
@@ -21,15 +53,16 @@ export const uploadDocument = async (req: Request, res: Response) => {
       documentNumber: req.body.documentNumber,
       documentIssuedAt: req.body.documentIssuedAt,
       documentExpiryAt: req.body.documentExpiryAt,
-      fileUrl: req.body.fileUrl,
-      mimeType: req.file.mimetype,
+      fileUrlFront: trimmedFrontUrl,
+      fileUrlBack: trimmedBackUrl,
+      mimeTypeFront: frontFile.mimetype,
+      mimeTypeBack: backFile?.mimetype,
     });
 
-    logger.info("Document uploaded successfully", doc);
+    logger.info("Document uploaded successfully");
     res.status(201).json({
       success: true,
       message: "Document uploaded successfully",
-      document: doc,
     });
   } catch (error) {
     logger.error("Error uploading document", error);

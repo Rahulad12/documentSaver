@@ -14,8 +14,10 @@ export interface IDocument extends mongoose.Document {
   documentNumber: string;
   documentIssuedAt: Date;
   documentExpiryAt: Date;
-  fileUrl: string;
-  mimeType: string;
+  fileUrlFront: string;
+  fileUrlBack: string;
+  mimeTypeFront: string;
+  mimeTypeBack?: string;
 }
 
 const DocumentSchema = new mongoose.Schema(
@@ -50,13 +52,21 @@ const DocumentSchema = new mongoose.Schema(
       required: false,
     },
 
-    fileUrl: {
+    fileUrlFront: {
       type: String,
       required: true,
     },
-    mimeType: {
+    fileUrlBack: {
+      type: String,
+      required: false,
+    },
+    mimeTypeFront: {
       type: String,
       required: true,
+    },
+    mimeTypeBack: {
+      type: String,
+      required: false,
     },
   },
   {

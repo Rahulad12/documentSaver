@@ -77,8 +77,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ColumnType, DocumentItem } from "@/types";
-import { FileText, ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
@@ -96,23 +95,8 @@ const CustomTable = ({
   columns,
   isLoading = false,
   onRowClick,
-  sortable = false
 }: Props) => {
   const navigate = useNavigate();
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  const handleSort = (columnId: string) => {
-    if (!sortable) return;
-
-    if (sortColumn === columnId) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(columnId);
-      setSortDirection('asc');
-    }
-  };
-
   const getDocumentTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       citizenship: "bg-blue-100 text-blue-800 hover:bg-blue-100",
@@ -126,56 +110,15 @@ const CustomTable = ({
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white">
-      {/* Table Header Stats */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
-        <div>
-          <h3 className="text-lg font-semibold text-primary">Documents</h3>
-          <p className="text-sm text-gray-600 mt-1">
-            {documents.length} {documents.length === 1 ? 'document' : 'documents'} total
-          </p>
-        </div>
-        {/* <div className="flex items-center gap-2 mt-3 sm:mt-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search documents..."
-              className="pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition w-full sm:w-auto"
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filter
-          </Button>
-        </div> */}
-      </div>
-
-      {/* Table Container */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[calc(80vh-12rem)]">
         <Table className="min-w-full">
-          <TableHeader className="bg-gradient-to-r from-gray-50 to-gray-100/50">
-            <TableRow className="border-b border-gray-200 hover:bg-transparent">
+          <TableHeader className="bg-linear-to-r from-gray-50 to-gray-100/50">
+            <TableRow className="border-b border-gray-200 hover:bg-transparent sticky top-0 z-10">
               {columns.map((col, index) => (
                 <TableHead
                   key={col.accessorKey || index}
-                  className={`fixed top-0 py-4 px-6 font-semibold bg-primary text-primary-foreground text-sm uppercase tracking-wider ${col.name === "Preview Document" ? "text-right" : ""
-                    } ${sortable && col.sortable ? 'cursor-pointer select-none' : ''}`}
-                  onClick={() => col.sortable && handleSort(col.accessorKey || '')}
+                  className="text-primary-foreground bg-primary sticky top-0"
                 >
-                  <div className={`flex items-center gap-1 ${col.name === "Preview Document" ? 'justify-end' : ''
-                    }`}>
-                    {col.name}
-                    {sortable && col.sortable && sortColumn === col.accessorKey && (
-                      sortDirection === 'asc' ?
-                        <ChevronUp className="h-4 w-4 ml-1" /> :
-                        <ChevronDown className="h-4 w-4 ml-1" />
-                    )}
-                  </div>
+                  {col.name}
                 </TableHead>
               ))}
             </TableRow>
@@ -205,7 +148,7 @@ const CustomTable = ({
                 <TableRow
                   key={doc._id || index}
                   className={`
-                    hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-blue-50/50 
+                    hover:bg-linear-to-r hover:from-indigo-50/50 hover:to-blue-50/50 
                     transition-all duration-200 cursor-pointer
                     ${index % 2 === 0 ? 'bg-gray-50/30' : 'bg-white'}
                     ${onRowClick ? 'cursor-pointer' : ''}
@@ -213,7 +156,6 @@ const CustomTable = ({
                   onClick={() => onRowClick && onRowClick(doc)}
                 >
                   {columns.map((col, colIndex) => {
-                    // Special handling for document type column
                     if (col.accessorKey === 'documentType') {
                       return (
                         <TableCell
@@ -308,42 +250,6 @@ const CustomTable = ({
             )}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Table Footer
-      {documents.length > 0 && !isLoading && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-t bg-gray-50">
-          <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-            Showing <span className="font-semibold text-gray-900">{documents.length}</span> of{' '}
-            <span className="font-semibold text-gray-900">{documents.length}</span> documents
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={true}
-              className="h-8 w-8 p-0"
-            >
-              ←
-            </Button>
-            <span className="text-sm text-gray-700 px-2">Page 1 of 1</span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={true}
-              className="h-8 w-8 p-0"
-            >
-              →
-            </Button>
-            <select className="ml-2 text-sm border border-gray-300 rounded-lg px-3 py-1 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none">
-              <option value="10">10 per page</option>
-              <option value="25">25 per page</option>
-              <option value="50">50 per page</option>
-            </select>
-          </div>
-        </div>
-      )} */}
-    </div>
   );
 };
 
