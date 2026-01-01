@@ -3,6 +3,12 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { generateToken } from "@/utils/tokenGenerator";
 import logger from "@/utils/logger";
+import crypto from "crypto";
+
+// Generate a random access key for documents
+const generateAccessKey = (): string => {
+  return crypto.randomBytes(16).toString("hex");
+};
 
 export const register = async (req: Request, res: Response) => {
   const { email, password, name } = req.body;
@@ -19,16 +25,20 @@ export const register = async (req: Request, res: Response) => {
       });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+    const documentAccessKey = generateAccessKey();
+
     user = await User.create({
       name,
       email,
       password: hashedPassword,
+      documentAccessKey,
     });
 
     logger.info("User registered successfully", user);
     res.status(201).json({
       success: true,
       message: "User registered successfully",
+      documentAccessKey: documentAccessKey,
     });
   } catch (error) {
     logger.error("Error registering user", error);
@@ -86,7 +96,7 @@ export const getProfile = async (req: Request, res: Response) => {
   try {
     logger.info("Fetching user profile", req.user?.sub);
     const user = await User.findById(req.user?.sub).select(
-      "-password -__v -createdAt -updatedAt -_id"
+      "-password -__v -createdAt -updatedAt -_id -documentAccessKey"
     );
     if (!user) {
       logger.warn("User not found", req.user?.sub);

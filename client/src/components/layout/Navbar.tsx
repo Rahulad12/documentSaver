@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 const Navbar = () => {
   const navigate = useNavigate();
   const { mutateAsync: logOut } = useLogout();
-  const id: string | null = localStorage.getItem("user_id")
+  const id: string | null = sessionStorage.getItem("user_id")
   console.log(id);
   const { data } = useGetUserProfile(id as string)
 

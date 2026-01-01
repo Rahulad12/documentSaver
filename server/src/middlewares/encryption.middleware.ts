@@ -19,9 +19,6 @@ export const encryptUploadedFile = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("Encryption middleware called");
-  console.log("Request file:", req.file?.originalname);
-  console.log("Request body:", req.body);
   if (!req.file) {
     console.log("No file uploaded");
     return next();

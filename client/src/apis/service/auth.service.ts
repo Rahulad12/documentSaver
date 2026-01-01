@@ -5,14 +5,14 @@ export const getApiBaseUrl = () => {
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-  return localStorage.getItem("access_token");
+  return sessionStorage.getItem("access_token");
 };
 
 export const setAccessToken = (token: string) => {
-  localStorage.setItem("access_token", token);
+  sessionStorage.setItem("access_token", token);
 };
 export const isAuthenticate = () => {
-  const token = localStorage.getItem("access_token");
+  const token = sessionStorage.getItem("access_token");
   if (token) {
     return true;
   }

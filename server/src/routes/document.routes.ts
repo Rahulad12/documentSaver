@@ -10,6 +10,7 @@ import { validateDocumentRequest } from "@/utils/ValidatorDefinations";
 import { validate } from "@/middlewares/validate";
 import serveDocumentById from "@/controllers/documentFile.controllers";
 import { decryptAndServeFile } from "@/middlewares/encryption.middleware";
+import { validateDocumentAccessKey } from "@/middlewares/documentKeyValidation.middleware";
 
 const documentRouter = express.Router();
 
@@ -32,8 +33,8 @@ documentRouter.get(
   serveDocumentById
 );
 
-documentRouter.get("/", Authenticate, getMyDocuments);
+documentRouter.get("/", Authenticate, validateDocumentAccessKey, getMyDocuments);
 
-documentRouter.get("/:id", Authenticate, getDocumentById);
+documentRouter.get("/:id", Authenticate, validateDocumentAccessKey, getDocumentById);
 
 export default documentRouter;

@@ -27,10 +27,6 @@ export const uploadDocument = async (req: Request, res: Response) => {
 
   // Get back file (optional)
   const backFile = files.back?.[0];
-  console.log({
-    frontFile,
-    backFile,
-  });
   try {
     // Upload front file to Cloudinary
     const uploadedFront: any = await uploadToCloudinary(frontFile);

@@ -21,12 +21,20 @@ export const postDocument = (document: DocumentCreatePayload) => {
   });
 };
 
-export const getAllDocument = () => {
-  return axiosInstance.get("/documents");
+export const getAllDocument = (documentAccessKey: string) => {
+  return axiosInstance.get("/documents", {
+    headers: {
+      "x-document-access-key": documentAccessKey,
+    },
+  });
 };
 
-export const getDocumentById = (id: string) => {
-  return axiosInstance.get(`/documents/${id}`);
+export const getDocumentById = (id: string, documentAccessKey: string) => {
+  return axiosInstance.get(`/documents/${id}`, {
+    headers: {
+      "x-document-access-key": documentAccessKey,
+    },
+  });
 };
 
 export const getDocumentFileAndPreview = async (id: string, side: string) => {

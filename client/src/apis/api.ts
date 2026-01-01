@@ -42,8 +42,10 @@ axiosInstance.interceptors.response.use(
       !originalRequest._skipAuth
     ) {
       originalRequest._retry = true;
-      localStorage.removeItem("access_token");
-      return axiosInstance(originalRequest);
+      sessionStorage.removeItem("access_token");
+      window.location.reload();
+    } else if (error.response && error.response.status === 403) {
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }

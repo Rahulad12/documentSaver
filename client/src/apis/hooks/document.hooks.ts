@@ -17,25 +17,34 @@ export const UseSaveDocument = () => {
   });
 };
 
-export const useGetAllDocuments = () => {
+export const useGetAllDocuments = (documentAccessKey?: string) => {
   return useQuery({
-    queryKey: ["documents"],
+    queryKey: ["documents", documentAccessKey],
     queryFn: async () => {
-      return getAllDocument();
+      if (!documentAccessKey) {
+        throw new Error("Document access key is required");
+      }
+      return getAllDocument(documentAccessKey);
     },
     retry: 1,
-    enabled: true,
+    enabled: !!documentAccessKey,
   });
 };
 
-export const useGetAllDocumentsById = (documentId: string) => {
+export const useGetAllDocumentsById = (
+  documentId: string,
+  documentAccessKey?: string
+) => {
   return useQuery({
-    queryKey: [documentId],
+    queryKey: [documentId, documentAccessKey],
     queryFn: async () => {
-      return getDocumentById(documentId);
+      if (!documentAccessKey) {
+        throw new Error("Document access key is required");
+      }
+      return getDocumentById(documentId, documentAccessKey);
     },
     retry: 1,
-    enabled: !!documentId,
+    enabled: !!documentId && !!documentAccessKey,
   });
 };
 
@@ -48,3 +57,4 @@ export const useDocumentPreview = () => {
       toast.error(error.response?.data?.message || "Failed to load preview"),
   });
 };
+

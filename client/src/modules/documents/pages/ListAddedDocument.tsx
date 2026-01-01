@@ -10,14 +10,32 @@ import CustomTable from "../component/Table";
 import dayjs from "dayjs";
 import DocumentPreviewDialog from "@/components/DocumentPreview";
 import { useState } from "react";
+import { KeyVerificationDialog } from "@/components/KeyVerificationDialog";
 
 const ListAddedDocument = () => {
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [showKeyDialog, setShowKeyDialog] = useState(true);
+  const [documentAccessKey, setDocumentAccessKey] = useState<string | null>(
+    null
+  );
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const { data: documents, isLoading } = useGetAllDocuments();
+  const { data: documents, isLoading } = useGetAllDocuments(
+    documentAccessKey || undefined
+  );
   const { mutateAsync: preview } = useDocumentPreview();
+
+  const handleKeySubmit = (key: string) => {
+    setIsVerifying(true);
+    // Simulate verification - the actual validation happens on the backend
+    setTimeout(() => {
+      setDocumentAccessKey(key);
+      setShowKeyDialog(false);
+      setIsVerifying(false);
+    }, 500);
+  };
 
   const handlePreview = async (doc: any, side: string) => {
     try {
@@ -30,7 +48,8 @@ const ListAddedDocument = () => {
       console.error("Preview failed", err);
     }
   };
-console.log(mimeType);
+
+  console.log(mimeType);
   const columns: ColumnType[] = [
     {
       name: "Document Title",
@@ -198,6 +217,12 @@ console.log(mimeType);
         onOpenChange={setOpen}
         previewUrl={selectedDoc}
         mimeType={mimeType}
+      />
+
+      <KeyVerificationDialog
+        open={showKeyDialog}
+        onKeySubmit={handleKeySubmit}
+        isLoading={isVerifying}
       />
     </PageLayout>
   );

@@ -16,8 +16,8 @@ export const useLoginUser = () => {
       return res;
     },
     onSuccess: (res) => {
-      localStorage.setItem("user_id", res.data.profile.id);
-      localStorage.setItem("access_token", res.data.access_token);
+      sessionStorage.setItem("user_id", res.data.profile.id);
+      sessionStorage.setItem("access_token", res.data.access_token);
       toast.success(res.data.message);
     },
     onError: (error: any) => {
@@ -46,7 +46,7 @@ export const useRegisterUser = () => {
 export const useLogout = () => {
   return useMutation({
     mutationFn: async () => {
-      localStorage.removeItem("access_token");
+      sessionStorage.removeItem("access_token");
     },
     onSuccess: () => {
       toast.success("Logout successfully");
