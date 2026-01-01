@@ -73,7 +73,9 @@ const RegisterPage = () => {
       if (res.status === 201) {
         setGeneratedKey(res.data.documentAccessKey);
 
-        setShowKeyDialog(true);
+        setTimeout(() => {
+          setShowKeyDialog(true);
+        }, 500);
       }
     } catch (error: any) {
       console.log(error);
@@ -234,6 +236,7 @@ const RegisterPage = () => {
       {generatedKey && (
         <KeyVerificationDialog
           open={showKeyDialog}
+          onOpenChange={setShowKeyDialog}
           showKeyDisplay={generatedKey}
           onKeySubmit={handleKeyAcknowledged}
         />

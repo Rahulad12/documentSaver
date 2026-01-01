@@ -221,6 +221,7 @@ const ListAddedDocument = () => {
 
       <KeyVerificationDialog
         open={showKeyDialog}
+        onOpenChange={setShowKeyDialog}
         onKeySubmit={handleKeySubmit}
         isLoading={isVerifying}
       />
