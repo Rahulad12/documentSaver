@@ -5,12 +5,11 @@ import {
 import type { ColumnType } from "@/types";
 import PageLayout from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, FileText, Calendar } from "lucide-react";
 import CustomTable from "../component/Table";
 import dayjs from "dayjs";
 import DocumentPreviewDialog from "@/components/DocumentPreview";
 import { useState } from "react";
-
 
 const ListAddedDocument = () => {
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
@@ -20,30 +19,36 @@ const ListAddedDocument = () => {
   const { data: documents, isLoading } = useGetAllDocuments();
   const { mutateAsync: preview } = useDocumentPreview();
 
-  const handlePreview = async (doc: any) => {
-    console.log(doc);
+  const handlePreview = async (doc: any, side: string) => {
     try {
-      const blob = await preview(doc._id);
-      console.log(blob);
+      const blob = await preview({ id: doc._id, side });
       const url = URL.createObjectURL(blob);
-      console.log(url);
       setSelectedDoc(url);
-      setMimeType(doc.mimeType || doc.mimetype);
+      setMimeType(blob.type);
       setOpen(true);
     } catch (err) {
       console.error("Preview failed", err);
     }
   };
-
-
+console.log(mimeType);
   const columns: ColumnType[] = [
     {
-      name: "Title",
+      name: "Document Title",
       accessorKey: "title",
       cell: ({ row }) => (
-        <span className="capitalize">
-          {row.original.title || "-"}
-        </span>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-100 rounded-lg">
+            <FileText className="w-4 h-4 text-indigo-600" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900 text-sm">
+              {row.original.title || "-"}
+            </span>
+            <span className="text-xs text-gray-500">
+              ID: {row.original._id?.slice(-8)}
+            </span>
+          </div>
+        </div>
       ),
     },
     {
@@ -59,50 +64,118 @@ const ListAddedDocument = () => {
       name: "Document Number",
       accessorKey: "documentNumber",
       cell: ({ row }) => (
-        <span className="capitalize">
-          {row.original.documentNumber || "-"}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-mono text-sm font-semibold text-gray-900">
+            {row.original.documentNumber || "-"}
+          </span>
+          <span className="text-xs text-gray-500">Document ID</span>
+        </div>
       ),
     },
     {
       name: "Issued At",
       accessorKey: "documentIssuedAt",
       cell: ({ row }) => (
-        <span>
-          {row.original.documentIssuedAt
-            ? dayjs(row.original.documentIssuedAt).format("YYYY-MM-DD")
-            : "-"}
-        </span>
+        <div className="flex items-center gap-2">
+          {row.original.documentIssuedAt ? (
+            <>
+              <Calendar className="w-4 h-4 text-green-600" />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-900">
+                  {dayjs(row.original.documentIssuedAt).format("MMM DD, YYYY")}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {dayjs(row.original.documentIssuedAt).format("MMM DD, YYYY")}
+                </span>
+              </div>
+            </>
+          ) : (
+            <span className="text-gray-400">Not specified</span>
+          )}
+        </div>
       ),
     },
     {
       name: "Expiry At",
       accessorKey: "documentExpiryAt",
-      cell: ({ row }) => (
-        <span>
-          {row.original.documentExpiryAt
-            ? dayjs(row.original.documentExpiryAt).format("YYYY-MM-DD")
-            : "-"}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const isExpired = row.original.documentExpiryAt &&
+          dayjs(row.original.documentExpiryAt).isBefore(dayjs());
+        const isExpiringSoon = row.original.documentExpiryAt &&
+          dayjs(row.original.documentExpiryAt).diff(dayjs(), 'days') < 30 &&
+          !isExpired;
+
+        return (
+          <div className="flex items-center gap-2">
+            {row.original.documentExpiryAt ? (
+              <>
+                <Calendar className={`w-4 h-4 ${isExpired ? 'text-red-600' :
+                  isExpiringSoon ? 'text-amber-600' :
+                    'text-blue-600'
+                  }`} />
+                <div className="flex flex-col">
+                  <span className={`text-sm font-medium ${isExpired ? 'text-red-600' :
+                    isExpiringSoon ? 'text-amber-600' :
+                      'text-gray-900'
+                    }`}>
+                    {dayjs(row.original.documentExpiryAt).format("MMM DD, YYYY")}
+                  </span>
+                  <span className={`text-xs ${isExpired ? 'text-red-500 font-medium' :
+                    isExpiringSoon ? 'text-amber-500 font-medium' :
+                      'text-gray-500'
+                    }`}>
+                    {isExpired ? 'Expired' : dayjs(row.original.documentExpiryAt).format("MMM DD, YYYY")}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <span className="text-gray-400">No expiry</span>
+            )}
+          </div>
+        );
+      },
     },
     {
-      name: "Preview Document",
-      accessorKey: "preview",
+      name: "Front Document",
+      accessorKey: "frontPreview",
       cell: ({ row }) => (
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
+          onClick={(e) => {
+            e.stopPropagation();
             handlePreview({
               _id: row.original._id,
               title: row.original.title,
               mimeType: row.original.mimeType,
-            })
-          }
+            }, "front");
+          }}
+          className="gap-2 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition-colors"
         >
-          <Eye className="w-4 h-4 mr-1" />
-          View
+          <Eye className="w-4 h-4" />
+          View Front
+        </Button>
+      ),
+    },
+    {
+      name: "Back Document",
+      accessorKey: "backPreview",
+      cell: ({ row }) => (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePreview({
+              _id: row.original._id,
+              title: row.original.title,
+              mimeType: row.original.mimeType,
+            }, "back");
+          }}
+          className="gap-2 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition-colors"
+        >
+          <Eye className="w-4 h-4" />
+          View Back
         </Button>
       ),
     },
@@ -111,7 +184,7 @@ const ListAddedDocument = () => {
   return (
     <PageLayout
       title="Saved Documents"
-      description="List of all saved documents"
+      description="Manage and view all your saved documents"
     >
       <CustomTable
         documents={documents?.data?.data ?? []}
@@ -120,7 +193,7 @@ const ListAddedDocument = () => {
       />
 
       <DocumentPreviewDialog
-        title="Preview Document"
+        title="Document Preview"
         open={open}
         onOpenChange={setOpen}
         previewUrl={selectedDoc}

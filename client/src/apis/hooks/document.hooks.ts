@@ -41,8 +41,8 @@ export const useGetAllDocumentsById = (documentId: string) => {
 
 export const useDocumentPreview = () => {
   return useMutation({
-    mutationFn: async (id: string) => {
-      return getDocumentFileAndPreview(id);
+    mutationFn: async ({ id, side }: { id: string; side: string }) => {
+      return getDocumentFileAndPreview(id, side);
     },
     onError: (error: any) =>
       toast.error(error.response?.data?.message || "Failed to load preview"),

@@ -29,8 +29,8 @@ export const getDocumentById = (id: string) => {
   return axiosInstance.get(`/documents/${id}`);
 };
 
-export const getDocumentFileAndPreview = async (id: string) => {
-  const res = await axiosInstance.get(`/documents/file/${id}`, {
+export const getDocumentFileAndPreview = async (id: string, side: string) => {
+  const res = await axiosInstance.get(`/documents/file?id=${id}&side=${side}`, {
     responseType: "blob",
   });
 

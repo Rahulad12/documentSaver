@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, CheckCircle2, CalendarIcon, Type, Hash, FileType, CalendarDays, FileDigit, Info } from "lucide-react";
 import PageLayout from "@/components/layout/PageLayout";
 import { UseSaveDocument } from "@/apis/hooks/document.hooks";
-import type { DocumentRequestTypes } from "@/apis/service/document.service";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,11 +52,18 @@ const documentSchema = z
         if (!date) return true;
         return dayjs(date).isAfter(today);
       }, "Expiry date must be after today"),
-    document: z
+    front: z
       .instanceof(FileList)
-      .refine((files) => files.length > 0, "Document file is required")
+      .refine((files) => files.length > 0, "Front document file is required")
       .refine(
         (files) => files[0]?.size <= 5_000_000,
+        "File size must be less than 5MB"
+      ),
+    back: z
+      .instanceof(FileList)
+      .optional()
+      .refine(
+        (files) => !files || files.length === 0 || files[0]?.size <= 5_000_000,
         "File size must be less than 5MB"
       ),
   })
@@ -80,7 +86,8 @@ const documentSchema = z
 type FormData = z.infer<typeof documentSchema>;
 
 const AddDocuments = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFrontFile, setSelectedFrontFile] = useState<File | null>(null);
+  const [selectedBackFile, setSelectedBackFile] = useState<File | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const {
@@ -94,50 +101,53 @@ const AddDocuments = () => {
     resolver: zodResolver(documentSchema),
   });
 
-  const fileInput = watch("document");
+  const frontFileInput = watch("front");
+  const backFileInput = watch("back");
 
   React.useEffect(() => {
-    if (fileInput && fileInput.length > 0) {
-      setSelectedFile(fileInput[0]);
+    if (frontFileInput && frontFileInput.length > 0) {
+      setSelectedFrontFile(frontFileInput[0]);
     }
-  }, [fileInput]);
+  }, [frontFileInput]);
+
+  React.useEffect(() => {
+    if (backFileInput && backFileInput.length > 0) {
+      setSelectedBackFile(backFileInput[0]);
+    }
+  }, [backFileInput]);
 
   const { mutateAsync: saveDocument, isPending: documentSaveLoading } =
     UseSaveDocument();
 
   const onSubmit = async (data: FormData) => {
-    const payload: DocumentRequestTypes = {
-      title: data.title,
-      description: data.description || "",
-      documentType: data.documentType,
-      documentNumber: data.documentNumber,
-      documentIssuedAt: data.documentIssuedAt,
-      documentExpiryAt: data.documentExpiryAt,
-      document: data.document[0],
-      mimetype: data.document[0].type,
-    };
-    console.log("Payload:", payload);
-
     const formData = new FormData();
-    formData.append("title", payload.title);
-    formData.append("description", payload.description);
-    formData.append("documentType", payload.documentType);
-    formData.append("document", payload.document);
-    formData.append("documentNumber", payload.documentNumber);
-    formData.append("mimetype", payload.mimetype);
+    formData.append("title", data.title);
+    formData.append("description", data.description || "");
+    formData.append("documentType", data.documentType);
+    formData.append("documentNumber", data.documentNumber);
+    
+    // Append front file
+    if (data.front && data.front[0]) {
+      formData.append("front", data.front[0]);
+      formData.append("frontMimetype", data.front[0].type);
+    }
+    
+    // Append back file if exists
+    if (data.back && data.back[0]) {
+      formData.append("back", data.back[0]);
+      formData.append("backMimetype", data.back[0].type);
+    }
 
-    if (payload.documentIssuedAt) {
-      // Use dayjs to format the date
+    if (data.documentIssuedAt) {
       formData.append(
         "documentIssuedAt",
-        dayjs(payload.documentIssuedAt).toISOString()
+        dayjs(data.documentIssuedAt).toISOString()
       );
     }
-    if (payload.documentExpiryAt) {
-      // Use dayjs to format the date
+    if (data.documentExpiryAt) {
       formData.append(
         "documentExpiryAt",
-        dayjs(payload.documentExpiryAt).toISOString()
+        dayjs(data.documentExpiryAt).toISOString()
       );
     }
 
@@ -146,7 +156,8 @@ const AddDocuments = () => {
       console.log(res);
       setSubmitSuccess(true);
       reset();
-      setSelectedFile(null);
+      setSelectedFrontFile(null);
+      setSelectedBackFile(null);
       setTimeout(() => setSubmitSuccess(false), 3000);
     } catch (error: any) {
       console.log(error);
@@ -195,7 +206,7 @@ const AddDocuments = () => {
           </Alert>
         )}
 
-        <Card className="border shadow-sm">
+        <Card className="border shadow-sm overflow-auto max-h-[calc(90vh-12rem)]">
           <CardContent className="p-6">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-primary">Document Information</h2>
@@ -354,7 +365,7 @@ const AddDocuments = () => {
                             selected={field.value}
                             onSelect={field.onChange}
                             disabled={(date) => dayjs(date).isAfter(today)}
-                            initialFocus
+                            captionLayout="dropdown"
                           />
                         </PopoverContent>
                       </Popover>
@@ -402,6 +413,7 @@ const AddDocuments = () => {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
+                            captionLayout="dropdown"
                             disabled={(date) =>
                               dayjs(date).isBefore(today) ||
                               dayjs(date).isSame(today, "day")
@@ -422,94 +434,188 @@ const AddDocuments = () => {
               </div>
 
               {/* File Upload Section */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Upload className="h-4 w-4 text-primary/90" />
-                  <label className="text-sm font-semibold text-muted-foreground">
-                    Document File *
-                  </label>
-                </div>
-
-                <div className="relative">
-                  <input
-                    {...register("document")}
-                    type="file"
-                    className="hidden"
-                    id="file-upload"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
-                  />
-
-                  {selectedFile ? (
-                    <div className="border-2 border-dashed border-green-200 rounded-xl p-6 bg-green-50">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-white rounded-lg shadow-sm">
-                          <FileText className="h-8 w-8 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {(selectedFile.size / 1024).toFixed(2)} KB • {
-                                  selectedFile.type.split('/')[1]?.toUpperCase() || 'FILE'
-                                }
-                              </p>
-                            </div>
-                            <Badge variant="outline" className="bg-white">
-                              Selected
-                            </Badge>
-                          </div>
-                          <div className="mt-4 flex gap-3">
-                            <label
-                              htmlFor="file-upload"
-                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-primary bg-indigo-50 rounded-lg hover:bg-indigo-100 cursor-pointer transition"
-                            >
-                              Change File
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const input = document.getElementById('file-upload') as HTMLInputElement;
-                                if (input) input.value = '';
-                                setSelectedFile(null);
-                              }}
-                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <label
-                      htmlFor="file-upload"
-                      className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200"
-                    >
-                      <div className="p-4 bg-gray-100 rounded-full mb-4">
-                        <Upload className="h-8 w-8 text-gray-500" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-gray-900 mb-1">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Supports: PDF, DOC, XLS, PPT, TXT, JPG, PNG
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Maximum file size: 5MB
-                        </p>
-                      </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Front Document */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Upload className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
+                      Front Document *
                     </label>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      {...register("front")}
+                      type="file"
+                      className="hidden"
+                      id="front-file-upload"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                    />
+
+                    {selectedFrontFile ? (
+                      <div className="border-2 border-dashed border-green-200 rounded-xl p-6 bg-green-50">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-white rounded-lg shadow-sm">
+                            <FileText className="h-8 w-8 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-medium text-gray-900">{selectedFrontFile.name}</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {(selectedFrontFile.size / 1024).toFixed(2)} KB • {
+                                    selectedFrontFile.type.split('/')[1]?.toUpperCase() || 'FILE'
+                                  }
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="bg-white">
+                                Selected
+                              </Badge>
+                            </div>
+                            <div className="mt-4 flex gap-3">
+                              <label
+                                htmlFor="front-file-upload"
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-primary bg-indigo-50 rounded-lg hover:bg-indigo-100 cursor-pointer transition"
+                              >
+                                Change File
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const input = document.getElementById('front-file-upload') as HTMLInputElement;
+                                  if (input) input.value = '';
+                                  setSelectedFrontFile(null);
+                                }}
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="front-file-upload"
+                        className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200"
+                      >
+                        <div className="p-4 bg-gray-100 rounded-full mb-4">
+                          <Upload className="h-8 w-8 text-gray-500" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            Click to upload or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Supports: PDF, DOC, XLS, PPT, TXT, JPG, PNG
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Maximum file size: 5MB
+                          </p>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+
+                  {errors.front && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      {errors.front.message}
+                    </p>
                   )}
                 </div>
 
-                {errors.document && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    <Info className="h-3 w-3" />
-                    {errors.document.message}
-                  </p>
-                )}
+                {/* Back Document */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Upload className="h-4 w-4 text-primary/90" />
+                    <label className="text-sm font-semibold text-muted-foreground">
+                      Back Document (Optional)
+                    </label>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      {...register("back")}
+                      type="file"
+                      className="hidden"
+                      id="back-file-upload"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                    />
+
+                    {selectedBackFile ? (
+                      <div className="border-2 border-dashed border-green-200 rounded-xl p-6 bg-green-50">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-white rounded-lg shadow-sm">
+                            <FileText className="h-8 w-8 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-medium text-gray-900">{selectedBackFile.name}</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {(selectedBackFile.size / 1024).toFixed(2)} KB • {
+                                    selectedBackFile.type.split('/')[1]?.toUpperCase() || 'FILE'
+                                  }
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="bg-white">
+                                Selected
+                              </Badge>
+                            </div>
+                            <div className="mt-4 flex gap-3">
+                              <label
+                                htmlFor="back-file-upload"
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-primary bg-indigo-50 rounded-lg hover:bg-indigo-100 cursor-pointer transition"
+                              >
+                                Change File
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const input = document.getElementById('back-file-upload') as HTMLInputElement;
+                                  if (input) input.value = '';
+                                  setSelectedBackFile(null);
+                                }}
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="back-file-upload"
+                        className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200"
+                      >
+                        <div className="p-4 bg-gray-100 rounded-full mb-4">
+                          <Upload className="h-8 w-8 text-gray-500" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            Click to upload or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Supports: PDF, DOC, XLS, PPT, TXT, JPG, PNG
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Maximum file size: 5MB
+                          </p>
+                        </div>
+                      </label>
+                    )}
+                  </div>
+
+                  {errors.back && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      {errors.back.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -536,9 +642,12 @@ const AddDocuments = () => {
                   variant="destructive"
                   onClick={() => {
                     reset();
-                    setSelectedFile(null);
-                    const input = document.getElementById('file-upload') as HTMLInputElement;
-                    if (input) input.value = '';
+                    setSelectedFrontFile(null);
+                    setSelectedBackFile(null);
+                    const frontInput = document.getElementById('front-file-upload') as HTMLInputElement;
+                    const backInput = document.getElementById('back-file-upload') as HTMLInputElement;
+                    if (frontInput) frontInput.value = '';
+                    if (backInput) backInput.value = '';
                   }}
                   disabled={documentSaveLoading}
                   className="flex-1 h-11 cursor-pointer"

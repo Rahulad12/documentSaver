@@ -42,7 +42,7 @@ axiosInstance.interceptors.response.use(
       !originalRequest._skipAuth
     ) {
       originalRequest._retry = true;
-      // Optionally, implement token refresh logic here
+      localStorage.removeItem("access_token");
       return axiosInstance(originalRequest);
     }
     return Promise.reject(error);
