@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://document-saver.vercel.app",
+      "https://kagjaat-bora.vercel.app",
       "http://localhost:5174",
     ],
   })
