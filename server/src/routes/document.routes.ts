@@ -14,6 +14,7 @@ import { validateDocumentAccessKey } from "@/middlewares/documentKeyValidation.m
 
 const documentRouter = express.Router();
 
+
 documentRouter.post(
   "/",
   Authenticate,
